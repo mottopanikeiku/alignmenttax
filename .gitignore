@@ -6,6 +6,9 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+.uv-cache/
+.uv-python/
+.tmp-tests/
 
 data/raw/*
 data/processed/*
@@ -15,4 +18,3 @@ reports/*
 !data/processed/.gitkeep
 !runs/.gitkeep
 !reports/.gitkeep
-
