@@ -1,15 +1,31 @@
+# Python/build/test artifacts
 __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Local environments and dependency caches
 .venv/
 venv/
 .uv-cache/
 .uv-python/
 .tmp-tests/
 
+# Secrets and local machine config
+.env
+.env.*
+*.local
+
+# Model/data caches
+.hf-cache/
+.cache/
+huggingface/
+model_cache/
+models/
+
+# Generated datasets, model outputs, and private report artifacts
 data/raw/*
 data/processed/*
 runs/*
@@ -18,3 +34,10 @@ reports/*
 !data/processed/.gitkeep
 !runs/.gitkeep
 !reports/.gitkeep
+
+# Local scratch/export files
+*.log
+*.tmp
+*.bak
+*.pptx
+*.pdf

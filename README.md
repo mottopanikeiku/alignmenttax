@@ -29,10 +29,22 @@ Score the Qwen pair locally:
 alignmenttax score --config configs/qwen2_5_1_5b.yaml --out runs/qwen2_5_1_5b/scores.jsonl
 ```
 
+For long CPU runs, add `--resume` so interrupted runs continue from completed rows:
+
+```powershell
+alignmenttax score --config configs/qwen2_5_1_5b.yaml --out runs/qwen2_5_1_5b/scores.jsonl --resume
+```
+
 Analyze the paired results:
 
 ```powershell
 alignmenttax analyze --run runs/qwen2_5_1_5b --out reports/qwen2_5_1_5b
+```
+
+Run the second-stage held-out calibration repair analysis:
+
+```powershell
+alignmenttax calibrate --run runs/qwen2_5_1_5b --out reports/qwen2_5_1_5b
 ```
 
 For real Qwen scoring, install the model and plotting extras before running `score`:
