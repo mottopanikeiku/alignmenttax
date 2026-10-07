@@ -145,7 +145,13 @@ def score_checkpoints(include_optional: bool):
 
     os.chdir("/project")
     import hashlib
-    scorer_source_sha256 = hashlib.sha256(Path("src/alignmenttax/standard.py").read_bytes()).hexdigest()
+    source_hash = hashlib.sha256()
+    for name in ("standard.py", "scoring.py"):
+        source_hash.update(name.encode() + b"\0")
+        source_hash.update((Path("src/alignmenttax") / name).read_bytes())
+    scorer_source_sha256 = source_hash.hexdigest()
+    packages = {name: importlib.metadata.version(name) for name in
+                ("torch", "transformers", "accelerate", "huggingface-hub", "numpy", "pyyaml")}
     torch.set_num_threads(2)
     torch.set_num_interop_threads(2)
     torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
@@ -239,8 +245,10 @@ def score_checkpoints(include_optional: bool):
                 saved = json.loads(gzip.decompress(saved_bytes))
                 if (saved["config"]["models"][model_key] != public_config or
                         saved["config"]["standard_dataset"] != manifest["standard_dataset"] or
-                        saved["config"]["scoring"]["template_date"] != manifest["scoring"]["template_date"] or
+                        saved["config"]["scoring"] != manifest["scoring"] or
+                        saved["config"]["standard_scoring"] != manifest["standard_scoring"] or
                         saved["runtime"]["scorer_source_sha256"] != scorer_source_sha256 or
+                        saved["runtime"]["packages"] != packages or
                         len(saved["standard"]) != 1634 or
                         len(saved["binary"]) != (0 if pair_id in existing_binary else 1580)):
                     raise ValueError(f"{pair_id}/{model_key}: saved unit does not match this run.")
@@ -298,7 +306,8 @@ def score_checkpoints(include_optional: bool):
                                         reused_from_protocol=SHARED_PLAIN_PROTOCOL)
                                    for row in list(binary_rows))
             elapsed = time.perf_counter() - model_started
-            config = {key: manifest[key] for key in ("dataset", "scoring", "analysis", "standard_dataset")}
+            config = {key: manifest[key] for key in
+                      ("dataset", "scoring", "analysis", "standard_dataset", "standard_scoring")}
             config.update(pair)
             runtime = {
                 "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -314,8 +323,7 @@ def score_checkpoints(include_optional: bool):
                 "template_date": manifest["scoring"]["template_date"],
                 "scorer_source_sha256": scorer_source_sha256,
                 "peak_cuda_memory_allocated_bytes": torch.cuda.max_memory_allocated(),
-                "packages": {name: importlib.metadata.version(name) for name in
-                             ("torch", "transformers", "accelerate", "huggingface-hub", "numpy", "pyyaml")},
+                "packages": packages,
                 "python": sys.version,
                 "cost_basis": "H100 $3.9492/hour + 2 CPU cores $0.047160/core-hour + 16 GiB $0.007992/GiB-hour",
             }
@@ -324,14 +332,15 @@ def score_checkpoints(include_optional: bool):
             cloud_out = Path("/cache/results/day_scale") / pair_id
             cloud_out.mkdir(parents=True, exist_ok=True)
             payload_bytes = json.dumps(payload, sort_keys=True).encode()
-            (cloud_out / f"{model_key}.json.gz").write_bytes(gzip.compress(payload_bytes, mtime=0))
+            compressed_payload = gzip.compress(payload_bytes, mtime=0)
+            (cloud_out / f"{model_key}.json.gz").write_bytes(compressed_payload)
             volume.commit()
             del cached, scorer
             gc.collect()
             torch.cuda.empty_cache()
             torch.cuda.reset_peak_memory_stats()
             pair_measured_seconds += elapsed
-            yield gzip.compress(payload_bytes, mtime=0)
+            yield compressed_payload
             print(f"Completed {pair_id}/{model_key}: {len(standard_rows)} standard rows, "
                   f"{len(binary_rows)} new binary rows", flush=True)
         pair_times[pair_id] = max(pair_measured_seconds, time.perf_counter() - pair_started)
