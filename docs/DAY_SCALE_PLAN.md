@@ -15,6 +15,8 @@ If the measured throughput and remaining budget permit complete additional pairs
 
 The standard native sensitivity wraps that same complete harness Q/A prompt in the instruct checkpoint's user chat template, with an assistant generation prefix. Base checkpoints remain plain. These sensitivity scores are not the harness's default prompt setting. The inherited protocol identifiers are retained for pairing, but standard rows explicitly contain answer-string likelihood arrays rather than A/B label likelihoods.
 
+I will fix date-sensitive native templates to 2026-10-07 for both the standard and new binary scores. Mistral Small's pinned template otherwise inserts the wall-clock date into its default system message. The configured date will be recorded with each run and included in the identity checked before reusing a completed cloud unit.
+
 For standard MC1, I additionally report maximum answer-set probability, the overconfidence gap, equal-frequency ECE, NLL of the best answer and multiclass Brier `sum((p - y)^2)`. This Brier definition is not the binary derivative's one-probability Brier. MC2 is a truth-mass metric, not a hard classification accuracy; I will not reuse MC1 confidence to claim MC2 calibration.
 
 ## Computation and numerical checks

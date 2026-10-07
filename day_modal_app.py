@@ -175,7 +175,8 @@ def score_checkpoints(include_optional: bool):
         reference_count = settings["cache_reference_questions"]
         records = standard[:max(reference_count, batch_size)]
         prompts = [build_standard_prompt(item, model_key=model_key, protocol=protocol,
-                                         tokenizer=cached.scorer.tokenizer) for item in records]
+                                         tokenizer=cached.scorer.tokenizer,
+                                         template_date=manifest["scoring"]["template_date"]) for item in records]
         choices = [list(dict.fromkeys(" " + answer for answer in
                                       item["mc1_choices"] + item["mc2_choices"])) for item in records]
         accelerated = cached.score_question_batch(prompts, choices)
@@ -238,6 +239,7 @@ def score_checkpoints(include_optional: bool):
                 saved = json.loads(gzip.decompress(saved_bytes))
                 if (saved["config"]["models"][model_key] != public_config or
                         saved["config"]["standard_dataset"] != manifest["standard_dataset"] or
+                        saved["config"]["scoring"]["template_date"] != manifest["scoring"]["template_date"] or
                         saved["runtime"]["scorer_source_sha256"] != scorer_source_sha256 or
                         len(saved["standard"]) != 1634 or
                         len(saved["binary"]) != (0 if pair_id in existing_binary else 1580)):
@@ -258,6 +260,7 @@ def score_checkpoints(include_optional: bool):
                 scorer, continuation_batch_size=settings["continuation_batch_size"],
                 logit_chunk_size=settings["logit_chunk_size"],
                 add_bos_token=manifest["standard_dataset"]["add_bos_token"],
+                template_date=manifest["scoring"]["template_date"],
             )
             batch_size = settings["question_batch_size_large" if
                                   pair["experiment"]["parameters_billion"] >= 14 else "question_batch_size_small"]
@@ -274,7 +277,8 @@ def score_checkpoints(include_optional: bool):
                 if pair_id not in existing_binary:
                     for item in binary:
                         prompt = build_prompt(item, protocol=protocol, model_key=model_key,
-                                              tokenizer=scorer.tokenizer)
+                                              tokenizer=scorer.tokenizer,
+                                              template_date=manifest["scoring"]["template_date"])
                         row_started = time.perf_counter()
                         logprob_a, logprob_b, counts = scorer.score_prompt(prompt)
                         binary_rows.append(_score_row(
@@ -307,6 +311,7 @@ def score_checkpoints(include_optional: bool):
                 "continuation_batch_size": settings["continuation_batch_size"],
                 "numerical_checks": numerical_checks, "base_native_rows_reuse_shared_plain": model_key == "base",
                 "bf16_reduced_precision_reduction": False,
+                "template_date": manifest["scoring"]["template_date"],
                 "scorer_source_sha256": scorer_source_sha256,
                 "peak_cuda_memory_allocated_bytes": torch.cuda.max_memory_allocated(),
                 "packages": {name: importlib.metadata.version(name) for name in
