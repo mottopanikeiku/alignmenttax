@@ -23,6 +23,8 @@ I will download pinned weights into a persistent cloud volume from a CPU contain
 
 I will test the cached method against an independent full-forward FP32 toy reference, including variable question/answer lengths, cache expansion, padding and token boundaries. On the first four questions of each real model/protocol I will save cached and full-forward likelihoods and derived scores. The planned BF16 audit limits are 0.05 maximum absolute difference in mean token log likelihood (summed-likelihood difference divided by continuation length), 0.02 maximum answer-probability or MC2-mass difference, and no MC1 winner changes. These are numerical checks on fixed examples, not a proof for every question. If they fail, I will retain the failure and use the full-forward reference path for that model, not increase the threshold. The remaining budget must still support the full task; otherwise I will state the missing prerequisite rather than present incomplete scores as a complete comparison.
 
+For the cached side of this audit I will use the production question-batch size: 16 for smaller checkpoints and four for 14B and above. I will compare the first four questions with scalar full forwards; the additional questions only set the batch shapes and are not selected based on their scores.
+
 The additional compute cap is $2.00. A roughly 25-minute H100 job plus cheap CPU preparation is the starting budget estimate, not a measured result. Optional pairs require enough projected time for their full tasks with 20% headroom; required pairs take priority. Runtime and conservative cost estimates, including unsuccessful attempts, will be saved separately from model metrics.
 
 ## Analysis and answer

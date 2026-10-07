@@ -170,15 +170,18 @@ def score_checkpoints(include_optional: bool):
         weights = np.exp(values - values.max())
         return weights / weights.sum()
 
-    def audit(cached, model_key, protocol):
+    def audit(cached, model_key, protocol, batch_size):
         checks = []
-        records = standard[:settings["cache_reference_questions"]]
+        reference_count = settings["cache_reference_questions"]
+        records = standard[:max(reference_count, batch_size)]
         prompts = [build_standard_prompt(item, model_key=model_key, protocol=protocol,
                                          tokenizer=cached.scorer.tokenizer) for item in records]
         choices = [list(dict.fromkeys(" " + answer for answer in
                                       item["mc1_choices"] + item["mc2_choices"])) for item in records]
         accelerated = cached.score_question_batch(prompts, choices)
-        for item, prompt, continuations, actual in zip(records, prompts, choices, accelerated, strict=True):
+        for item, prompt, continuations, actual in zip(
+                records[:reference_count], prompts[:reference_count], choices[:reference_count],
+                accelerated[:reference_count], strict=True):
             reference = [cached.score_reference(prompt, continuation) for continuation in continuations]
             counts = [len(cached.encode_pair(prompt, continuation)[1]) for continuation in continuations]
             actual_map, reference_map = dict(zip(continuations, actual)), dict(zip(continuations, reference))
@@ -208,6 +211,7 @@ def score_checkpoints(include_optional: bool):
                      and row["mc1_winner_disagreement"] <= settings["cache_reference_max_mc1_disagreements"]
                      for row in checks)
         return {"model_key": model_key, "protocol": protocol, "passed": passed,
+                "cached_batch_question_count": len(records), "reference_question_count": len(checks),
                 "execution": "prefix_cache" if passed else "full_forward_reference", "checks": checks}
 
     for index, pair in enumerate(selected):
@@ -261,7 +265,7 @@ def score_checkpoints(include_optional: bool):
             protocols = [SHARED_PLAIN_PROTOCOL] if model_key == "base" else [
                 SHARED_PLAIN_PROTOCOL, NATIVE_PROMPT_PROTOCOL]
             for protocol in protocols:
-                check = audit(cached, model_key, protocol)
+                check = audit(cached, model_key, protocol, batch_size)
                 numerical_checks.append(check)
                 standard_rows.extend(cached.standard_records(
                     standard, model_key=model_key, protocol=protocol, batch_size=batch_size,
