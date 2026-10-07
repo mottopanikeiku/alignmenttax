@@ -7,7 +7,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-from .io_utils import ensure_parent, read_jsonl
+from .io_utils import ensure_parent, read_jsonl, scores_path
 from .metrics import METRIC_NAMES, calibration_bins, metric_summary, two_way_softmax
 
 
@@ -161,7 +161,7 @@ def _plot_stage2_bars(summary_rows: list[dict[str, Any]], output_dir: Path) -> s
     ax.set_xticklabels(labels)
     ax.set_title("Raw and temperature-scaled instruct metrics on held-out test split")
     ax.legend()
-    path = output_dir / "stage2_instruct_calibration_repair.png"
+    path = output_dir / "stage2_instruct_calibration_repair.svg"
     fig.tight_layout()
     fig.savefig(path, dpi=170)
     plt.close(fig)
@@ -204,7 +204,7 @@ def _plot_stage2_reliability(
     ax.set_ylabel("Accuracy")
     ax.set_title("Stage 2 reliability on held-out test split")
     ax.legend()
-    path = output_dir / "stage2_reliability_instruct_shared_prompt.png"
+    path = output_dir / "stage2_reliability_instruct_shared_prompt.svg"
     fig.tight_layout()
     fig.savefig(path, dpi=170)
     plt.close(fig)
@@ -223,7 +223,7 @@ def run_calibration_stage(
         raise ValueError("Calibration fraction must be between 0 and 1.")
     output_dir = Path(report_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    scores = read_jsonl(Path(run_dir) / "scores.jsonl")
+    scores = read_jsonl(scores_path(run_dir))
     grouped = _group_scores(scores, calibration_fraction=calibration_fraction, seed=seed)
 
     temperatures: dict[tuple[str, str], float] = {}
