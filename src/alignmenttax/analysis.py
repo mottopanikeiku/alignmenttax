@@ -57,9 +57,13 @@ def _summary_rows(
     protocols = sorted({protocol for protocol, _model in grouped})
     rows: list[dict[str, Any]] = []
     for protocol in protocols:
+        groups = {model_key: grouped.get((protocol, model_key), []) for model_key in ("base", "instruct")}
+        if groups["base"] and groups["instruct"]:
+            # Match paired_bootstrap_deltas: compare both models on the same questions.
+            shared = {row["question_id"] for row in groups["base"]} & {row["question_id"] for row in groups["instruct"]}
+            groups = {key: [row for row in group if row["question_id"] in shared] for key, group in groups.items()}
         summaries: dict[str, dict[str, float | int]] = {}
-        for model_key in ("base", "instruct"):
-            group = grouped.get((protocol, model_key))
+        for model_key, group in groups.items():
             if group:
                 summaries[model_key] = metric_summary(group, ece_bins=ece_bins, binning=binning)
         for metric in ("n", *METRIC_NAMES):
