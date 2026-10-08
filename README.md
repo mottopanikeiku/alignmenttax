@@ -50,6 +50,6 @@ My [conservative compute estimate is $6.12](results/day_scale/cost.json), includ
 - These fixed checkpoints are not a family population. Intervals resample questions, not training seeds, and have no multiplicity correction; ECE depends on binning.
 - [21 of 27 cache audits failed](results/day_scale/numerical_audit.json), so those conditions use scalar full forwards with unchanged thresholds. Audits cover only four fixed questions per condition, not every question; no precision sweep was run.
 
-TruthfulQA is by [Lin, Hilton and Evans](https://arxiv.org/abs/2109.07958). Calibration/post-training precedents include [Guo et al.](https://arxiv.org/abs/1706.04599), [Kadavath et al.](https://arxiv.org/abs/2207.05221) and [Huang, Lu and Zeng](https://arxiv.org/abs/2508.00264). [Earlier temperature-scaling results](results/cross_family/qwen2_5_0_5b/calibration) remain a separate supplement.
+TruthfulQA is by [Lin, Hilton and Evans](https://arxiv.org/abs/2109.07958). Calibration/post-training precedents include [Guo et al.](https://arxiv.org/abs/1706.04599), [Kadavath et al.](https://arxiv.org/abs/2207.05221) and [Huang, Lu and Zeng](https://arxiv.org/abs/2508.00264). [Earlier temperature-scaling results](results/cross_family/qwen2_5_0_5b/calibration) remain a separate supplement. Both Qwen2.5-0.5B-Instruct temperatures there stop at the search's upper bound of 200, which flattens confidence to about 50% rather than finding an interior optimum.
 
 Written with AI coding assistance.
