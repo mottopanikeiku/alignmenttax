@@ -42,7 +42,7 @@ def _group_scores(rows: list[dict[str, Any]]) -> dict[tuple[str, str], list[dict
 def _write_csv(path: str | Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> None:
     output_path = ensure_parent(path)
     with output_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore", lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
