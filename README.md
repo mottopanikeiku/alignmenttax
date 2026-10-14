@@ -2,6 +2,8 @@
 
 **I find opposite calibration changes under two TruthfulQA scoring definitions.** With shared prompts, six of nine binary comparisons gain accuracy but worsen ECE. On standard MC1, four improve both and none show that resolved tradeoff.
 
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.svg"><img alt="Nine base-to-instruct pairs: under binary TruthfulQA scoring six become more accurate but worse calibrated; under standard MC1 none do, and four improve on both." src="docs/hero-light.svg" width="600"></picture>
+
 I compare Qwen2.5 (0.5/1.5/7/14/32B), OLMo-2 (1/7B), SmolLM2 (1.7B) and Mistral (7B). I report [counts, raw sources and every metric](results/day_scale/analysis/summary.json).
 
 ## Reproduce
